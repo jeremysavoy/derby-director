@@ -1,0 +1,159 @@
+# Derby Director Setup and Testing Guide
+
+This guide will help you set up and test your Derby Director application.
+
+## Setup Instructions
+
+### 1. Install Dependencies
+
+First, make sure you have Poetry installed. Then install all dependencies:
+
+```bash
+poetry install
+```
+
+### 2. Initialize the Database
+
+The initialization script will create the database schema and add sample data:
+
+```bash
+poetry run python -m derby_director.migrations.init_db
+```
+
+This will:
+- Run the Alembic migrations to create all tables
+- Add sample data including divisions, ranks, racers, and heats
+
+### 3. Start the API Server
+
+```bash
+poetry run start
+# or
+poetry run uvicorn derby_director.main:app --reload
+```
+
+The server will start at http://localhost:8000
+
+## Testing the API
+
+### Option 1: Using the API Testing Script
+
+We've provided a convenient script to test all the major API endpoints:
+
+```bash
+poetry run python api_test_script.py
+```
+
+This script will:
+1. Log in to the API using the default credentials (admin/derby2023)
+2. Test the division endpoints
+3. Test the racer endpoints
+4. Test the heat endpoints
+5. Test the result endpoints
+
+### Option 2: Using the Interactive API Documentation
+
+Derby Director generates interactive API documentation:
+
+1. Start the server
+2. Open http://localhost:8000/docs in your browser
+3. Authenticate using the "Authorize" button with:
+   - Username: admin
+   - Password: derby2023
+4. Test endpoints directly in the browser
+
+### Option 3: Running Automated Tests
+
+```bash
+poetry run pytest
+```
+
+## Default Credentials
+
+The seed data creates the following default credentials:
+
+- **Username**: admin
+- **Password**: derby2023
+
+## API Endpoints
+
+Here's a summary of the main API endpoints:
+
+### Authentication
+- POST `/auth/login` - Authenticate and get JWT token
+- GET `/auth/me` - Get current user info
+
+### Divisions
+- GET `/divisions/` - List all divisions
+- GET `/divisions/{division_id}` - Get a specific division
+- POST `/divisions/` - Create a new division
+- PUT `/divisions/{division_id}` - Update a division
+- DELETE `/divisions/{division_id}` - Delete a division
+
+### Racers
+- GET `/racers/` - List all racers (with optional filtering)
+- GET `/racers/{racer_id}` - Get a specific racer
+- POST `/racers/` - Create a new racer
+- PUT `/racers/{racer_id}` - Update a racer
+- DELETE `/racers/{racer_id}` - Delete a racer
+
+### Heats
+- GET `/heats/` - List all heats (with optional filtering)
+- GET `/heats/{heat_id}` - Get a specific heat with lane assignments
+- POST `/heats/` - Create a new heat
+- PUT `/heats/{heat_id}` - Update a heat
+- DELETE `/heats/{heat_id}` - Delete a heat
+
+### Results
+- GET `/results/` - List all results (with optional filtering)
+- GET `/results/heat/{heat_id}` - Get results for a specific heat
+- POST `/results/heat` - Record results for a heat
+- DELETE `/results/heat/{heat_id}` - Delete results for a heat
+
+## Sample API Requests
+
+Here are some curl commands to test the API:
+
+### Login
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "derby2023"}'
+```
+
+### Get Divisions
+```bash
+# Replace YOUR_TOKEN with the token from login
+curl -X GET http://localhost:8000/divisions/ \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+### Create a Racer
+```bash
+# Replace YOUR_TOKEN and CLASS_ID
+curl -X POST http://localhost:8000/racers/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"firstname": "John", "lastname": "Doe", "divisionid": CLASS_ID, "carno": "123", "carname": "Lightning"}'
+```
+
+## Troubleshooting
+
+### Database Issues
+If you encounter database errors, you can reset the database:
+
+```bash
+# Remove the SQLite database file
+rm derby_director.db
+
+# Run the initialization again
+poetry run python -m derby_director.migrations.init_db
+```
+
+### Authentication Issues
+If you have trouble logging in, make sure the database was correctly seeded with the admin password. You can check this in the settings table.
+
+### Server Not Starting
+- Make sure all dependencies are installed: `poetry install`
+- Check if another process is using port 8000
+- Look for error messages in the console output

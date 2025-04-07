@@ -1,0 +1,178 @@
+# Poetry Usage Guide for Derby Director
+
+This document provides guidance on how to use Poetry for managing the Derby Director project.
+
+## Basic Commands
+
+### Install dependencies
+
+```bash
+# Install all dependencies including development dependencies
+poetry install
+
+# Install without dev dependencies (for production)
+poetry install --no-dev
+
+# Install with optional MySQL support
+poetry install -E mysql
+```
+
+### Add dependencies
+
+```bash
+# Add a new dependency
+poetry add package-name
+
+# Add a development dependency
+poetry add --group dev package-name
+
+# Add an optional dependency for MySQL
+poetry add --optional aiomysql
+```
+
+### Update dependencies
+
+```bash
+# Update all dependencies
+poetry update
+
+# Update a specific package
+poetry update package-name
+```
+
+### Run commands within the poetry environment
+
+```bash
+# Run the application
+poetry run python -m derby_director.main
+
+# Run tests
+poetry run pytest
+
+# Run code formatting
+poetry run black .
+poetry run isort .
+
+# Run linting
+poetry run ruff check .
+
+# Run type checking
+poetry run mypy .
+```
+
+### Activate the virtual environment
+
+```bash
+poetry shell
+```
+
+### Export dependencies to requirements.txt
+
+```bash
+# For production
+poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+# For development
+poetry export -f requirements.txt --output requirements-dev.txt --without-hashes --with dev
+```
+
+## Managing the Project
+
+### Adding scripts
+
+You can add custom scripts in the `pyproject.toml` file:
+
+```toml
+[tool.poetry.scripts]
+start = "derby_director.main:run_app"
+format = "derby_director.scripts:format_code"
+```
+
+Then run them with:
+
+```bash
+poetry run start
+poetry run format
+```
+
+### Creating a package
+
+To build a distributable package:
+
+```bash
+poetry build
+```
+
+This creates both wheel and source distributions in the `dist` directory.
+
+### Publishing
+
+If you want to publish to PyPI:
+
+```bash
+poetry publish
+```
+
+## Docker Integration
+
+When using Docker, you can leverage Poetry in your Dockerfile:
+
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Install Poetry
+RUN pip install poetry==1.4.2
+
+# Copy only pyproject.toml and poetry.lock first to leverage Docker cache
+COPY pyproject.toml poetry.lock ./
+
+# Configure poetry to not use virtual environments in Docker
+RUN poetry config virtualenvs.create false
+
+# Install dependencies
+RUN poetry install --no-dev
+
+# Copy application code
+COPY . .
+
+# Run the application
+CMD ["uvicorn", "derby_director.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+## CI/CD Integration
+
+For GitHub Actions, you can use:
+
+```yaml
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.4.2
+    - name: Install dependencies
+      run: poetry install
+    - name: Run tests
+      run: poetry run pytest
+    - name: Run linting
+      run: poetry run ruff check .
+    - name: Run type checking
+      run: poetry run mypy .
+```
