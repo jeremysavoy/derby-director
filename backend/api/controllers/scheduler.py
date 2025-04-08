@@ -4,7 +4,7 @@ Race scheduler controller for Derby Director
 Provides endpoints to create rounds, generate heats, and manage race schedules
 """
 
-from typing import Annotated, List, Dict, Optional, Any
+from typing import Annotated, List, Dict, Optional, AsyncGenerator, Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from litestar import get, post, Controller
@@ -13,15 +13,15 @@ from litestar.params import Dependency, Parameter
 from litestar.exceptions import HTTPException
 from litestar.status_codes import HTTP_200_OK, HTTP_201_CREATED
 
-from derby_director.api.services import RaceScheduler
-from derby_director.api.models import Round, Heat
-from derby_director.api.middleware.auth import get_jwt_user
+from backend.api.services import RaceScheduler
+from backend.api.models import Round, Heat
+from backend.api.middleware.auth import get_jwt_user
 
 
-async def provide_session() -> AsyncSession:
+async def provide_session() -> AsyncGenerator[AsyncSession, None]:
     """Dependency provider for database session"""
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-    from derby_director.config import DATABASE_URL
+    from backend.config import DATABASE_URL
     
     engine = create_async_engine(DATABASE_URL)
     async_session = async_sessionmaker(engine, expire_on_commit=False)
@@ -106,14 +106,16 @@ class SchedulerController(Controller):
     """Controller for race scheduling operations"""
     
     path = "/scheduler"
-    dependencies = {"session": Provide(provide_session)}
+    dependencies = {"session": Provide(provide_session),
+                    "user": Dependency(get_jwt_user)
+    }
     
     @post("/rounds/preliminary", status_code=HTTP_201_CREATED)
     async def create_preliminary_round(
         self,
         data: CreatePreliminaryRoundRequest,
         session: AsyncSession = Dependency(),
-        user: dict = Dependency(get_jwt_user)
+        user: dict = Dependency()
     ) -> RoundResponse:
         """Create a preliminary round for a division"""
         try:
@@ -141,7 +143,7 @@ class SchedulerController(Controller):
         self,
         data: CreateFinalRoundRequest,
         session: AsyncSession = Dependency(),
-        user: dict = Dependency(get_jwt_user)
+        user: dict = Dependency()
     ) -> RoundResponse:
         """Create a final round for a division"""
         try:
@@ -169,7 +171,7 @@ class SchedulerController(Controller):
         self,
         data: CreateChampionshipRoundRequest,
         session: AsyncSession = Dependency(),
-        user: dict = Dependency(get_jwt_user)
+        user: dict = Dependency()
     ) -> RoundResponse:
         """Create a championship round for top racers across all divisions"""
         try:
@@ -196,7 +198,7 @@ class SchedulerController(Controller):
         self,
         data: GenerateHeatsRequest,
         session: AsyncSession = Dependency(),
-        user: dict = Dependency(get_jwt_user)
+        user: dict = Dependency()
     ) -> HeatsGeneratedResponse:
         """Generate heats for a round based on its type"""
         try:
@@ -236,7 +238,7 @@ class SchedulerController(Controller):
         self,
         data: AdvanceRacersRequest,
         session: AsyncSession = Dependency(),
-        user: dict = Dependency(get_jwt_user)
+        user: dict = Dependency()
     ) -> HeatsGeneratedResponse:
         """Advance top racers from preliminary to final round"""
         try:
@@ -277,7 +279,7 @@ class SchedulerController(Controller):
         self,
         data: GenerateHeatsRequest,
         session: AsyncSession = Dependency(),
-        user: dict = Dependency(get_jwt_user)
+        user: dict = Dependency()
     ) -> HeatsGeneratedResponse:
         """Create championship heats with division winners"""
         try:

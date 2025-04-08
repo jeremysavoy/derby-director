@@ -14,7 +14,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from derby_director.api.models import Round, Heat, Racer, RacerHeat, RaceResult, Division
+from backend.api.models import Round, Heat, Racer, RacerHeat, RaceResult, Division
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +39,8 @@ class RaceScheduler:
             The created Round object
         """
         # Verify division exists
-        division = await self.session.get(Division, division_id)
-        if not division:
+        dvsn = await self.session.get(Division, division_id)
+        if not dvsn:
             raise ValueError(f"Division with ID {division_id} not found")
             
         # Check if preliminary round already exists
@@ -50,7 +50,7 @@ class RaceScheduler:
         )
         existing = await self.session.execute(existing_query)
         if existing.scalar_one_or_none():
-            raise ValueError(f"Preliminary round for division {division.name} already exists")
+            raise ValueError(f"Preliminary round for division {dvsn.name} already exists")
         
         # Get the highest round number for ordering
         max_round_query = select(func.max(Round.roundno)).where(Round.divisionid == division_id)
@@ -59,7 +59,7 @@ class RaceScheduler:
         
         # Create round name if not provided
         if not name:
-            name = f"{division.name} Preliminary"
+            name = f"{dvsn.name} Preliminary"
             
         # Create round
         round_obj = Round(
@@ -87,8 +87,8 @@ class RaceScheduler:
             The created Round object
         """
         # Verify division exists
-        division = await self.session.get(Division, division_id)
-        if not division:
+        dvsn = await self.session.get(Division, division_id)
+        if not dvsn:
             raise ValueError(f"Division with ID {division_id} not found")
             
         # Check if final round already exists
@@ -98,7 +98,7 @@ class RaceScheduler:
         )
         existing = await self.session.execute(existing_query)
         if existing.scalar_one_or_none():
-            raise ValueError(f"Final round for division {division.name} already exists")
+            raise ValueError(f"Final round for division {dvsn.name} already exists")
         
         # Get the highest round number for ordering
         max_round_query = select(func.max(Round.roundno)).where(Round.divisionid == division_id)
@@ -107,7 +107,7 @@ class RaceScheduler:
         
         # Create round name if not provided
         if not name:
-            name = f"{division.name} Finals"
+            name = f"{dvsn.name} Finals"
             
         # Create round
         round_obj = Round(
