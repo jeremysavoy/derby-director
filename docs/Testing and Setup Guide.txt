@@ -17,7 +17,7 @@ poetry install
 The initialization script will create the database schema and add sample data:
 
 ```bash
-poetry run python -m derby_director.migrations.init_db
+poetry run python -m backend.migrations.init_db
 ```
 
 This will:
@@ -29,7 +29,7 @@ This will:
 ```bash
 poetry run start
 # or
-poetry run uvicorn derby_director.main:app --reload
+poetry run uvicorn backend.main:app --reload
 ```
 
 The server will start at http://localhost:8000
@@ -144,10 +144,10 @@ If you encounter database errors, you can reset the database:
 
 ```bash
 # Remove the SQLite database file
-rm derby_director.db
+rm backend.db
 
 # Run the initialization again
-poetry run python -m derby_director.migrations.init_db
+poetry run python -m backend.migrations.init_db
 ```
 
 ### Authentication Issues

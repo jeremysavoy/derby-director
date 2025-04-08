@@ -4,7 +4,7 @@
 We've created a modular, organized codebase with clear separation of concerns:
 
 ```
-derby_director/
+backend/
 ├── api/                    # API package
 │   ├── controllers/        # API route handlers
 │   ├── models/             # Database models
