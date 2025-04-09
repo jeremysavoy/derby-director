@@ -73,6 +73,7 @@ def create_app() -> Litestar:
     # Create the application
     app = Litestar(
         route_handlers=get_controllers(),
+        path="api",
         plugins=[sqlalchemy_plugin],
         cors_config=cors_config,
         openapi_config=openapi_config,
