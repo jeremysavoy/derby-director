@@ -57,7 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await authService.login(username, password)
       token.value = response.access_token
-      localStorage.setItem('token', response.token)
+      localStorage.setItem('token', response.access_token)
       
       // Decode token to get user info
       const decoded = jwt_decode<JwtPayload>(response.token)
